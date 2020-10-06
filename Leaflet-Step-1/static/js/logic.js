@@ -1,7 +1,7 @@
 // Creating map object
 var myMap = L.map("map", {
-  center: [40.7, -73.95],
-  zoom: 11
+  center: [0, 0],
+  zoom: 2.5
 });
 
 // Adding tile layer to the map
@@ -14,30 +14,24 @@ L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
   accessToken: API_KEY
 }).addTo(myMap);
 
-//   // Use this link to get the geojson data.
-//   var url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson"
+  // Use this link to get the geojson data.
+  var url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson"
   
 
-//   // Grabbing our GeoJSON data..
-// d3.json(url, function(response) {
-//     console.log(response);
-//   // Creating a geoJSON layer with the retrieved data
-//     var heatArray = [];
+  // Grabbing our GeoJSON data..
+d3.json(url, function(response) {
+    console.log(response);
+  // Creating a geoJSON layer with the retrieved data
   
-//     for (var i = 0; i < response.length; i++) {
-//       var geometry = response[i].features.geometry;
+    for (var i = 0; i < response.features.length; i++) {
+      var geometry = response.features[i].geometry;
   
-//       if (geometry) {
-//         heatArray.push([geometry.coordinates[1], geometry.coordinates[0]]);
-//       }
-//     }
+      if (geometry) {
+        L.marker([geometry.coordinates[1], geometry.coordinates[0]]).addTo(myMap);
+      }
+    }
   
-//     var heat = L.heatLayer(heatArray, {
-//       radius: 20,
-//       blur: 35
-//     }).addTo(myMap);
-  
-//   });
+  // });
   //   // Called on each feature
   //   onEachFeature: function(feature, layer) {
   //     // Set mouse events to change map styling
@@ -66,4 +60,4 @@ L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 
   //   }
   // }).addTo(myMap);
-// });
+});
