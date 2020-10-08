@@ -1,7 +1,7 @@
 // Creating map object
 var myMap = L.map("map", {
-  center: [0, 0],
-  zoom: 2.5
+  center: [38.8850, -100.4444],
+  zoom: 6
 });
 
 // Adding tile layer to the map
@@ -15,49 +15,85 @@ L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 }).addTo(myMap);
 
   // Use this link to get the geojson data.
-  var url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson"
+  var url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
   
-
   // Grabbing our GeoJSON data..
-d3.json(url, function(response) {
-    console.log(response);
-  // Creating a geoJSON layer with the retrieved data
+  d3.json(url, function(response) {
+    // console.log(response);
   
-    for (var i = 0; i < response.features.length; i++) {
-      var geometry = response.features[i].geometry;
-  
-      if (geometry) {
-        L.marker([geometry.coordinates[1], geometry.coordinates[0]]).addTo(myMap);
+    // Creating a geoJSON layer with the retrieved data
+    function styleInfo(feature) {
+      return {
+        opacity: 1,
+        fillOpacity: 1,
+        fillColor: markerColor(feature.properties.mag),
+        color: "#000000",
+        radius: markerSize(feature.properties.mag),
+        stroke: true,
+        weight: 1
+      };
+    }
+    function markerSize(mag) {
+      if (mag === 0) {
+        return 1;
       }
+      return mag * 3.5;
+    }
+    
+    function markerColor(mag) {
+      switch (true) {
+      case mag > 6: 
+          return "#141452";
+      case mag > 5:
+          return "#24248f";
+      case mag > 4:
+          return "#3333cc";
+      case mag > 3:
+          return "#7070db";
+      case mag > 2:
+          return "#adadeb";
+      case mag > 1:
+          return "#ebebfa";
+      default:
+          return "white";
+      };
     }
   
-  // });
-  //   // Called on each feature
-  //   onEachFeature: function(feature, layer) {
-  //     // Set mouse events to change map styling
-  //     layer.on({
-  //       // When a user's mouse touches a map feature, the mouseover event calls this function, that feature's opacity changes to 90% so that it stands out
-  //       mouseover: function(event) {
-  //         layer = event.target;
-  //         layer.setStyle({
-  //           fillOpacity: 0.9
-  //         });
-  //       },
-  //       // When the cursor no longer hovers over a map feature - when the mouseout event occurs - the feature's opacity reverts back to 50%
-  //       mouseout: function(event) {
-  //         layer = event.target;
-  //         layer.setStyle({
-  //           fillOpacity: 0.5
-  //         });
-  //       },
-  //       // When a feature (neighborhood) is clicked, it is enlarged to fit the screen
-  //       click: function(event) {
-  //         myMap.fitBounds(event.target.getBounds());
-  //       }
-  //     });
-  //     // Giving each feature a pop-up with information pertinent to it
-  //     layer.bindPopup("<h1>" + feature.properties.neighborhood + "</h1> <hr> <h2>" + feature.properties.borough + "</h2>");
+    L.geoJson(response, {
+      pointToLayer: function(feature, latlng) {
+        return L.circleMarker(latlng);
+      },
+      style: styleInfo,
+      onEachFeature: function(feature, layer) {
+        layer.bindPopup("Magnitude: " + feature.properties.mag + "<br>Location: " + feature.properties.place);
+      }
+    }).addTo(myMap)
 
-  //   }
-  // }).addTo(myMap);
-});
+    var legend = L.control({position: "bottomright"});
+  
+    // details for the legend
+    legend.onAdd = function(map) {
+      var div = L.DomUtil.create("div", "info legend");
+      var grades = [0,1,2,3,4,5,6];
+      var colors = [
+        "white",
+        "#ebebfa",
+        "#adadeb",
+        "#7070db",
+        "#3333cc",
+        "#24248f",
+        "#141452"
+      ];
+  
+      // Looping through
+      for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+          "<i style='background: " + colors[i] + "'>&nbsp&nbsp&nbsp&nbsp</i> " +
+          grades[i] + (grades[i + 1] ? "&ndash;" + grades[i + 1] + "<br>" : "+");
+      }
+      return div;
+    };
+  
+    // Append legend to map.
+    legend.addTo(myMap);
+  });
